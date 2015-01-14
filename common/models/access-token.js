@@ -189,6 +189,25 @@ module.exports = function(AccessToken) {
           // Decode from base64
           var buf = new Buffer(id, 'base64');
           id = buf.toString('utf8');
+        } else if (id.toLowerCase().indexOf('Basic ') === 0) {
+          id = id.substring(6);
+          // Decode from base64
+          id = (new Buffer(id, 'base64')).toString('utf8');
+          // assuming the token will be longer than the portion being
+          // ignored, extract "a2b2c3" from:
+          //   "a2b2c3"
+          //   "a2b2c3:"   (curl http://a2b2c3@localhost:3000/)
+          //   "token:a2b2c3" (curl http://token:a2b2c3@localhost:3000/)
+          //   ":a2b2c3"
+          if (id.indexOf(':')) {
+            // get the longest part in <part1>:<part2>
+            id = [
+              id.slice(0, id.indexof(':')),
+              id.slice(id.indexOf(':'))
+            ].reduce(function (a, b) {
+              return a.length > b.length ? a : b;
+            });
+          }
         }
         return id;
       }
